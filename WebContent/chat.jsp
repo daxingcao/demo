@@ -14,6 +14,33 @@
 <script src="<%=request.getContextPath() %>/js/reconnecting-websocket.min.js"></script>
 <script src="<%=request.getContextPath() %>/js/chat.js"></script>
 <script type="text/javascript">
+	var userName = null;
+	var socket = null;
+	$(function() {
+		userName = $("#username").val();
+		//新建WebSocket对象，最后的/websocket对应服务器端的@ServerEndpoint("/websocket")
+		var socket = new ReconnectingWebSocket('ws://${pageContext.request.getServerName()}:${pageContext.request.getServerPort()}${pageContext.request.contextPath}/websocket/'+userName); 
+		socket.onopen = function(){
+			alert("Connection success!")
+		}
+		// 处理服务器端发送的数据
+		socket.onmessage = function(event) {
+			addMessage(event.data);
+		};
+		socket.onclose = function(){
+			alert("Connection is broken!")
+		}
+	})
+	//点击发送按钮
+	function sendContent(){
+		var content = $("#txtContent").val();
+		if(content == '' || content == null){
+			alert("输入内容为空");
+			$("#txtContent").focus();
+			return;
+		}
+		alert("sss")
+	}
 	function chatContent(){
 		var html = "";
 		var userId = $("#userId").val();
@@ -38,7 +65,6 @@
 		});
 		setTimeout(chatContent,2000);
 	}
-	
 	function scroll(){
 		var ul = document.getElementById('scrollUL');
 		ul.scrollTop = ul.scrollHeight;
@@ -48,7 +74,8 @@
 </head>
 <body style="margin: 0px;">
 <div id="convo" class="chat-div" data-from="Sonu Joshi">
-	<ul id="scrollUL" onmouseover="showScroll()" onmouseout="hiddenScroll()" class="chat-thread">
+ <!-- onmouseover="showScroll()" onmouseout="hiddenScroll()" -->
+	<ul id="scrollUL" class="chat-thread">
 		<li id='li-right' class='kuang'>hello!</li>
 		<li id='li-left' class='kuang'>Hi!</li>
 		<li id='li-right' class='kuang'>hello!</li>
@@ -60,10 +87,14 @@
 	</ul>
 	<div class="credits">
 		<div id="tools" class="tool_div">
-			<p style="font-size: 20px"><i class="icon-github-alt"></i></p>
+			<p style="font-size: 20px;padding-left: 10px;">
+				<i class="icon-github-alt" style="margin: 0px 10px;"></i><i class="icon-cut" style="margin: 0px 10px;"></i>
+			</p>
 		</div>
 		<textarea id="txtContent" class="txt"></textarea>
+		<input id="username" type="hidden" value="${sessionScope.user.username }" >
 		<input id="send" type="button" onclick="sendContent()" value="发送" class="btn btn-info"/>
+		<i style="float: right;padding: 10px 20px;">按Ctrl+enter换行</i>
 	</div>
 </div>
 <script type="text/javascript">
@@ -82,6 +113,21 @@
 		$("#scrollUL").css({
 			"overflow-y":"hidden"
 		})
+	}
+	//键盘按键控制
+	document.onkeydown = function(e){
+		e = e || event;
+		//enter触发事件
+		if(e.keyCode == 13 && !e.ctrlKey){
+			sendContent();
+			e.cancelBubble=true;
+			e.preventDefault();
+			e.stopPropagation();
+		}
+		if(e.keyCode == 13 && e.ctrlKey){
+			var e = $("#txtContent");
+			e.val(e.val()+'\n');
+		}
 	}
 </script>
 <%-- <div class="input-id">
