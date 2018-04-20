@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
+	   xmlns:context="http://www.springframework.org/schema/context"
+	   xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:tx="http://www.springframework.org/schema/tx"
+	   xmlns:aop="http://www.springframework.org/schema/aop"
+	   xmlns:task="http://www.springframework.org/schema/task"
+	   xmlns:mybatis="http://mybatis.org/schema/mybatis-spring"
+	   xsi:schemaLocation="http://www.springframework.org/schema/beans
+	http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+	http://www.springframework.org/schema/context
+  	http://www.springframework.org/schema/context/spring-context-3.0.xsd
+  	http://www.springframework.org/schema/mvc
+ 	http://www.springframework.org/schema/mvc/spring-mvc-4.0.xsd
+	http://www.springframework.org/schema/tx
+	http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
+	http://www.springframework.org/schema/aop
+	http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
+	http://www.springframework.org/schema/task
+	http://www.springframework.org/schema/task/spring-task-3.0.xsd
+	http://mybatis.org/schema/mybatis-spring
+	http://mybatis.org/schema/mybatis-spring.xsd"
+	   default-lazy-init="true">
+
+
+	<task:annotation-driven />
+	<context:annotation-config />
+	<!-- scanning automatically -->
+	<context:component-scan base-package="com.jabava" />
+
+	<aop:aspectj-autoproxy/>
+
+	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource">
+		<!--property name="driverClassName" value="com.mysql.jdbc.Driver" /-->
+		<property name="driverClassName" value="${dataSource.driver}" />
+		<property name="url" value="${dataSource.url}" />
+		<property name="username" value="${dataSource.username}"/>
+		<property name="password" value="${dataSource.password}"/>
+		<property name="initialSize" value="${dataSource.initialSize}" />
+		<property name="maxActive" value="${dataSource.maxActive}" />
+		<property name="maxIdle" value="${dataSource.maxIdle}" />
+		<property name="minIdle" value="${dataSource.minIdle}" />
+		<property name="maxWait" value="${dataSource.maxWait}"></property>
+	</bean>
+
+	<bean id="sqlSessionFactory" class="com.jabava.core.session.MybatisSqlSessionFactory">
+		<property name="configLocation" value="classpath:com/jabava/resources/mybatis.xml"></property>
+		<property name="dataSource" ref="dataSource" />
+		<property name="mapperLocations">
+			<array>
+				<value>classpath*:com/jabava/mapping/**/*.xml</value>
+				<value>classpath*:com/jabava/benefit/mapping/*.xml</value>
+			</array>
+		</property>
+	</bean>
+
+	<!--<mybatis:scan base-package="com.jabava.dao"/>-->
+	<bean class="tk.mybatis.spring.mapper.MapperScannerConfigurer" p:basePackage="com.jabava.dao,com.jabava.benefit.dao"
+		  p:sqlSessionFactoryBeanName="sqlSessionFactory" p:properties="mappers=tk.mybatis.mapper.common.Mapper,tk.mybatis.mapper.common.IdsMapper,tk.mybatis.mapper.common.MySqlMapper"/>
+	<!--bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<property name="basePackage" value="com.jabava.dao" />
+		<property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"/>
+	</bean-->
+	<tx:annotation-driven transaction-manager="transactionManager"/>
+	<!-- transaction manager, use JtaTransactionManager for global tx -->
+	<bean id="transactionManager"
+		  class="org.springframework.orm.hibernate4.HibernateTransactionManager"
+		  p:sessionFactory-ref="jabava.hibernateSessionFactory">
+		<!-- <property name="dataSource" ref="dataSource" /> -->
+	</bean>
+
+	<!-- Spring JdbcTemplate -->
+	<bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+		<property name="dataSource" ref="dataSource"/>
+	</bean>
+
+	<bean id="jabava.npJdbcTemplate" class="org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate">
+		<constructor-arg ref="dataSource"></constructor-arg>
+	</bean>
+
+	<bean id="jabava.hibernateSessionFactory"
+		  class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+		<property name="dataSource" ref="dataSource"></property>
+		<property name="hibernateProperties">
+			<props>
+				<prop key="hibernate.dialect">org.hibernate.dialect.MySQLDialect</prop>
+				<prop key="hibernate.show_sql">true</prop>
+				<!-- 自动更新表结构 -->
+				<!-- <prop key="hibernate.hbm2ddl.auto">update</prop> -->
+			</props>
+		</property>
+		<property name="namingStrategy">  
+            <bean class="org.hibernate.cfg.ImprovedNamingStrategy"></bean>  
+        </property> 
+		<property name="packagesToScan">
+			<list>
+				<value>com.jabava</value>
+			</list>
+		</property>
+	</bean>
+
+	<bean id="jabava.hdao" class="com.jabava.benefit.dao.JabavaHdao">
+		<property name="sessionFactory" ref="jabava.hibernateSessionFactory"></property>
+		<property name="checkWriteOperations" value="false"></property>
+	</bean>
+
+	<aop:config>
+		<aop:advisor pointcut="execution(* com.jabava..service..*.*(..))"
+					 advice-ref="txAdvice" />
+	</aop:config>
+
+	<tx:advice id="txAdvice" transaction-manager="transactionManager">
+		<tx:attributes>
+			<tx:method name="get*" read-only="true" />
+			<tx:method name="query*" read-only="true" />
+			<tx:method name="find*" read-only="true" />
+			<tx:method name="load*" read-only="true" />
+			<tx:method name="list*" read-only="true" />
+			<tx:method name="search*" read-only="true" />
+			<tx:method name="select*" read-only="true" />
+			<tx:method name="*" propagation="REQUIRED" rollback-for="Exception" />
+		</tx:attributes>
+	</tx:advice>
+
+</beans>
