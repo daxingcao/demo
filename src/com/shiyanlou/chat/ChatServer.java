@@ -27,14 +27,14 @@ import net.sf.json.JSONObject;
  * @author shiyanlou
  *
  */
-@ServerEndpoint(value ="/websocket")
+@ServerEndpoint(value ="/websocket/{username}")
 public class ChatServer {
 	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm");  // 日期格式化
 	private static Map<String, Session> sessionMap = new Hashtable<>();
 	private static int i = 0;
 	private Gson json = new Gson();
 	@OnOpen
-	public void open(Session session,@PathParam("nickName")String nickName) {
+	public void open(Session session,@PathParam("username")String username) {
 		// 添加初始化操作
 		i += 1;
 		sessionMap.put(""+i, session);
