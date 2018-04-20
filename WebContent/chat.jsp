@@ -7,7 +7,8 @@
 <title>聊天室窗口</title>
 <link href="<%=request.getContextPath() %>/css/adv.css" rel="stylesheet" type="text/css" />
 <link href="<%=request.getContextPath() %>/css/bootstrap-theme.css" rel="stylesheet" />
-<link href="<%=request.getContextPath() %>//css/bootstrap.min.css" rel="stylesheet" />
+<link href="<%=request.getContextPath() %>/css/bootstrap.min.css" rel="stylesheet" />
+<link href="<%=request.getContextPath() %>/css/font-awesome.min.css" rel="stylesheet" />
 <script src="<%=request.getContextPath() %>/assets/js/jquery.min.js"></script>
 <script src="<%=request.getContextPath() %>/js/bootstrap.min.js"></script>
 <script src="<%=request.getContextPath() %>/js/reconnecting-websocket.min.js"></script>
@@ -59,7 +60,7 @@
 	</ul>
 	<div class="credits">
 		<div id="tools" class="tool_div">
-			<img alt="表情" src="images/biaoqing/biaoqing.png">
+			<p style="font-size: 20px"><i class="icon-github-alt"></i></p>
 		</div>
 		<textarea id="txtContent" class="txt"></textarea>
 		<input id="send" type="button" onclick="sendContent()" value="发送" class="btn btn-info"/>
